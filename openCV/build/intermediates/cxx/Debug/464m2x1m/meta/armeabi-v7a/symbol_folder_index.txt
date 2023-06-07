@@ -1,0 +1,1 @@
+C:\Users\Asus\AndroidStudioProjects\FiberCounter\openCV\build\intermediates\cxx\Debug\464m2x1m\obj\armeabi-v7a
