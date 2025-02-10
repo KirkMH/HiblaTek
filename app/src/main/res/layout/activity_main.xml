@@ -9,6 +9,14 @@
     tools:context=".MainActivity" >
 
     <ImageView
+        android:id="@+id/btNew"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:scaleType="centerInside"
+        android:adjustViewBounds="true"
+        android:src="@drawable/ic_arrow_back" />
+
+    <ImageView
         android:id="@+id/imageView1"
         android:layout_width="match_parent"
         android:layout_height="0dp"
@@ -17,128 +25,248 @@
         android:adjustViewBounds="true"
         android:src="@drawable/hiblatekbg" />
 
+    <TextView
+        android:id="@+id/subtitle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textColor="@color/brown"
+        android:gravity="center"
+        android:textSize="21sp"
+        android:text="Fiber Counter" />
+
+    <View
+        android:layout_width="1dp"
+        android:layout_height="50dp"  />
+
     <LinearLayout
         android:id="@+id/llMain"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
+        android:layout_height="280dp"
+        android:orientation="vertical"
         android:padding="10dp"
         android:gravity="bottom|center">
 
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:padding="10dp">
+
+            <TextView
+                android:layout_width="100dp"
+                android:layout_height="wrap_content"
+                android:text="Warp:"
+                android:textSize="16sp"
+                android:textColor="@color/black"/>
+
+            <TextView
+                android:id="@+id/warp_spinner"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="- Please select -"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:textColor="@color/black" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:padding="10dp">
+
+            <TextView
+                android:layout_width="100dp"
+                android:layout_height="wrap_content"
+                android:text="Weft:"
+                android:textSize="16sp"
+                android:textColor="@color/black"/>
+
+            <TextView
+                android:id="@+id/weft_spinner"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="- Please select -"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:textColor="@color/black" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:padding="10dp">
+
+            <TextView
+                android:layout_width="100dp"
+                android:layout_height="wrap_content"
+                android:text="Orientation:"
+                android:textSize="16sp"
+                android:textColor="@color/black"/>
+
+            <TextView
+                android:id="@+id/orientation_spinner"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Weft is horizontal."
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:textColor="@color/black" />
+
+        </LinearLayout>
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Choose an action to start"
+            android:gravity="center" />
+
         <View
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="1" />
+            android:layout_width="1dp"
+            android:layout_height="10dp"  />
 
         <Button
             android:id="@+id/btnCapture"
-            android:layout_width="140dp"
-            android:layout_height="100dp"
-            android:layout_alignParentLeft="true"
-            android:layout_alignParentBottom="true"
-            android:background="@color/silver"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:layout_gravity="center"
+            android:background="@drawable/rounded_corner"
             android:text="Take a Photo" />
 
         <View
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="1" />
+            android:layout_width="1dp"
+            android:layout_height="10dp"  />
 
         <Button
             android:id="@+id/btnGallery"
-            android:layout_width="140dp"
-            android:layout_height="100dp"
-            android:layout_alignParentLeft="true"
-            android:layout_alignParentBottom="true"
-            android:background="@color/silver"
-            android:elevation="30dp"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:layout_gravity="center"
+            android:background="@drawable/rounded_corner"
             android:text="Open Gallery" />
 
         <View
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="1" />
+            android:layout_width="1dp"
+            android:layout_height="10dp"  />
+
     </LinearLayout>
 
 
-    <TableLayout
-        android:id="@+id/tlResult"
-        android:visibility="gone"
+    <LinearLayout
+        android:id="@+id/llClassResult"
+        android:orientation="vertical"
+        android:gravity="center"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:padding="10dp"
-        android:stretchColumns="*"
-        android:gravity="bottom|center">
+        android:layout_height="wrap_content">
 
-        <TableRow>
-            <TextView
-                android:layout_width="200dp"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="10dp"
-                android:textSize="24sp"
-                android:paddingLeft="20dp"
-                android:text="Warps" />
-            <TextView
-                android:id="@+id/tvWarps"
-                android:layout_width="150dp"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="10dp"
-                android:paddingRight="20dp"
-                android:gravity="right"
-                android:textSize="24sp"
-                android:text="21" />
-        </TableRow>
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginTop="20dp"
+            android:background="@color/silver" />
 
-        <TableRow>
-            <TextView
-                android:layout_width="200dp"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="10dp"
-                android:textSize="24sp"
-                android:paddingLeft="20dp"
-                android:text="Wefts" />
-            <TextView
-                android:id="@+id/tvWefts"
-                android:layout_width="150dp"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="10dp"
-                android:paddingRight="20dp"
-                android:gravity="right"
-                android:textSize="24sp"
-                android:text="21" />
-        </TableRow>
+        <TableLayout
+            android:id="@+id/tlResult"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="10dp"
+            android:stretchColumns="*"
+            android:gravity="bottom|center">
 
-        <TableRow>
-            <TextView
-                android:layout_width="200dp"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="10dp"
-                android:textSize="28sp"
-                android:paddingLeft="20dp"
-                android:textColor="@color/black"
-                android:text="TOTAL" />
-            <TextView
-                android:id="@+id/tvTotal"
-                android:layout_width="150dp"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="10dp"
-                android:paddingRight="20dp"
-                android:gravity="right"
-                android:textColor="@color/black"
-                android:textSize="28sp"
-                android:text="21" />
-        </TableRow>
+            <TableRow>
+                <TextView
+                    android:layout_width="200dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:textSize="24sp"
+                    android:paddingLeft="20dp"
+                    android:textColor="@color/brown"
+                    android:text="Warp" />
+                <TextView
+                    android:id="@+id/tvWarps"
+                    android:layout_width="150dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:paddingRight="20dp"
+                    android:gravity="right"
+                    android:textSize="24sp"
+                    android:textColor="@color/brown"
+                    android:text="21" />
+            </TableRow>
 
-        <TableRow>
-            <Button
-                android:id="@+id/btNew"
-                android:layout_width="match_parent"
-                android:layout_height="60dp"
-                android:layout_marginTop="20dp"
-                android:layout_span="2"
-                android:background="@color/silver"
-                android:text="Start Over" />
-        </TableRow>
-    </TableLayout>
+            <TableRow>
+                <TextView
+                    android:layout_width="200dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:textSize="24sp"
+                    android:paddingLeft="20dp"
+                    android:textColor="@color/brown"
+                    android:text="Weft" />
+                <TextView
+                    android:id="@+id/tvWefts"
+                    android:layout_width="150dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:paddingRight="20dp"
+                    android:gravity="right"
+                    android:textSize="24sp"
+                    android:textColor="@color/brown"
+                    android:text="21" />
+            </TableRow>
+        </TableLayout>
 
+        <TextView
+            android:id="@+id/tvClass"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:layout_marginTop="20dp"
+            android:gravity="center_vertical|center"
+            android:background="@drawable/rounded_corner_taupe"
+            android:textColor="@color/black"
+            android:textSize="18sp"
+            android:text="Class" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:text="Fabric Specification"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:textColor="@color/black" />
+
+        <TextView
+            android:id="@+id/orientation_spec"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:layout_marginLeft="20dp"
+            android:text="Orientation: "
+            android:textSize="16sp"
+            android:textColor="@color/black" />
+
+        <TextView
+            android:id="@+id/warp_spec"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:layout_marginLeft="20dp"
+            android:text="Warp - Quality Standard"
+            android:textSize="16sp"
+            android:textColor="@color/black" />
+
+        <TextView
+            android:id="@+id/weft_spec"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:layout_marginLeft="20dp"
+            android:text="Weft - Quality Standard"
+            android:textSize="16sp"
+            android:textColor="@color/black"/>
+    </LinearLayout>
 </LinearLayout>

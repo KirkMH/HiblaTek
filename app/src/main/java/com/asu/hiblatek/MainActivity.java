@@ -1,9 +1,13 @@
 package com.asu.hiblatek;
 
 import android.content.ContentResolver;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
+import android.graphics.drawable.LayerDrawable;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -13,17 +17,23 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.Spinner;
 import android.widget.TableLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
 import androidx.core.content.FileProvider;
 
 import org.opencv.android.BaseLoaderCallback;
@@ -40,15 +50,25 @@ public class MainActivity extends AppCompatActivity {
     private static final int GALLERY_REQUEST = 2888;
     private final String TAG = "com.asu.hiblatek";
     private LinearLayout llMain;
-    private TableLayout tlResult;
+    private LinearLayout llClassResult;
     private TextView tvWarps;
     private TextView tvWefts;
-    private TextView tvTotal;
-    private Button btNew;
+    private TextView tvSubtitle;
+    private TextView tvClass;
+    private TextView tvWarpSpec;
+    private TextView tvWeftSpec;
+    private TextView tvOrientationSpec;
+    private ImageView btNew;
     private ImageView imageView;
     private Uri mImageUri;
+    private TextView spWarp;
+    private TextView spWeft;
+    private TextView spOrientation;
     private List<Bitmap> imageList = null;
     private int index = 0;
+    private String selectedWarp = "- Please select -";
+    private String selectedWeft = "- Please select -";
+    private String selectedOrientation = "horizontal";
 
     private final BaseLoaderCallback mLoaderCallback = new BaseLoaderCallback(this) {
         @Override
@@ -66,17 +86,47 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         llMain = findViewById(R.id.llMain);
-        tlResult = findViewById(R.id.tlResult);
+        llClassResult = findViewById(R.id.llClassResult);
         btNew = findViewById(R.id.btNew);
         imageView = findViewById(R.id.imageView1);
         tvWarps = findViewById(R.id.tvWarps);
         tvWefts = findViewById(R.id.tvWefts);
-        tvTotal = findViewById(R.id.tvTotal);
+        tvSubtitle = findViewById(R.id.subtitle);
+        tvClass = findViewById(R.id.tvClass);
+        spWarp = findViewById(R.id.warp_spinner);
+        spWeft = findViewById(R.id.weft_spinner);
+        spOrientation = findViewById(R.id.orientation_spinner);
+        tvWarpSpec = findViewById(R.id.warp_spec);
+        tvWeftSpec = findViewById(R.id.weft_spec);
+        tvOrientationSpec = findViewById(R.id.orientation_spec);
 
         displayMenu(true);
 
         Button btnCapture = this.findViewById(R.id.btnCapture);
+        spWarp.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                threadOptionAlert(true);
+            }
+        });
+        spWeft.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                threadOptionAlert(false);
+            }
+        });
+        spOrientation.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                orientationOptionAlert();
+            }
+        });
+
         btnCapture.setOnClickListener(v -> {
+            if (!thread_type_filled_in()) {
+                Toast.makeText(getApplicationContext(), "Please select the thread type for warp and weft.", Toast.LENGTH_SHORT).show();
+                return;
+            }
                 Intent cameraIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
             File photo;
             try
@@ -102,6 +152,10 @@ public class MainActivity extends AppCompatActivity {
 
         Button btnGallery = findViewById(R.id.btnGallery);
         btnGallery.setOnClickListener(view -> {
+            if (!thread_type_filled_in()) {
+                Toast.makeText(getApplicationContext(), "Please select the thread type for warp and weft.", Toast.LENGTH_SHORT).show();
+                return;
+            }
             Intent photoPickerIntent = new Intent(Intent.ACTION_PICK);
             photoPickerIntent.setType("image/*");
             startActivityForResult(photoPickerIntent, GALLERY_REQUEST);
@@ -111,6 +165,7 @@ public class MainActivity extends AppCompatActivity {
             if (imageList != null && imageList.size() > 0) {
                 index = ++index % imageList.size();
                 imageView.setImageBitmap(imageList.get(index));
+//                displayBitmapWithBorders(imageList.get(index));
             }
         });
 
@@ -170,10 +225,9 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.action_disclaimer:
-                displayDisclaimer(true);
-                return true;
+        if (item.getItemId() == R.id.action_disclaimer) {
+            displayDisclaimer(true);
+            return true;
         }
         return super.onOptionsItemSelected(item);
     }
@@ -214,26 +268,91 @@ public class MainActivity extends AppCompatActivity {
      */
     @RequiresApi(api = Build.VERSION_CODES.Q)
     private void processImage(Bitmap b) {
-        imageView.setImageBitmap(b);
+        displayBitmapWithBorders(b);
         FiberCounter fc = new FiberCounter(b, getApplicationContext());
         imageList = fc.start();
 
         FiberCounter.Count c = fc.getCount();
-        tvWarps.setText(c.vertical + "");
-        tvWefts.setText(c.horizontal + "");
-        tvTotal.setText(c.getTotal() + "");
+        if (selectedOrientation.equals("horizontal")) {
+            tvWarps.setText(c.vertical + "");
+            tvWefts.setText(c.horizontal + "");
+            displayClassification(c.vertical, c.horizontal);
+        }
+        else {
+            tvWarps.setText(c.horizontal + "");
+            tvWefts.setText(c.vertical + "");
+            displayClassification(c.horizontal, c.vertical);
+        }
         displayMenu(false);
+    }
+
+    private void displayBitmapWithBorders(Bitmap b) {
+        // Create the border drawable
+        Drawable borderDrawable = getResources().getDrawable(R.drawable.img_border);
+        // Create BitmapDrawable from the bitmap parameter
+        Drawable bitmapDrawable = new BitmapDrawable(getResources(), b);
+        // Combine the border and the BitmapDrawable into a LayerDrawable
+        Drawable[] layers = new Drawable[2];
+        layers[0] = borderDrawable; layers[1] = bitmapDrawable;
+        LayerDrawable layerDrawable = new LayerDrawable(layers);
+        // Set the LayerDrawable to the ImageView
+        imageView.setImageDrawable(layerDrawable);
+    }
+
+    private void displayClassification(int v, int h) {
+        String type = "";
+        String warpClass = "Quality Standard";
+        String weftClass = "Quality Standard";
+        if (selectedWarp.equals("Piña Liniwan") && selectedWeft.equals("Piña Liniwan")) {
+            type = (v >= 40 && h >= 101) ? "Premium" : "Regular";
+            if (h < 80) weftClass = "Below Standard";
+            if (v < 40) warpClass = "Below Standard";
+        }
+        else if (selectedWarp.equals("Piña Liniwan") && selectedWeft.equals("Piña Washed")) {
+            type = (v >= 40 && h >= 76) ? "Premium" : "Regular";
+            if (h < 65) weftClass = "Below Standard";
+            if (v < 40) warpClass = "Below Standard";
+        }
+        else if (selectedWarp.equals("Silk") && selectedWeft.equals("Piña Washed")) {
+            type = (v >= 40 && h >= 76) ? "Premium" : "Regular";
+            if (h < 65) weftClass = "Below Standard";
+            if (v < 40) warpClass = "Below Standard";
+        }
+        else
+            type = "Undetermined";
+
+        tvClass.setText(warpClass.equals("Below Standard") || weftClass.equals("Below Standard") ? "Below Standard" : type);
+        tvOrientationSpec.setText("Orientation: Weft is " + selectedOrientation + ".");
+        tvWarpSpec.setText("Warp - " + selectedWarp + ": " + warpClass);
+        tvWeftSpec.setText("Weft - " + selectedWeft + ": " + weftClass);
+
+        if (type.equals("Premium")) {
+            tvClass.setBackgroundResource(R.drawable.rounded_corner_gold);
+            tvClass.setTextColor(ContextCompat.getColor(this, R.color.gold));
+        }
+        else if (type.equals("Regular")) {
+            tvClass.setBackgroundResource(R.drawable.rounded_corner_olive);
+            tvClass.setTextColor(ContextCompat.getColor(this, R.color.olive));
+        }
+        else {
+            tvClass.setBackgroundResource(R.drawable.rounded_corner_taupe);
+            tvClass.setTextColor(ContextCompat.getColor(this, R.color.dark_gray));
+        }
     }
 
     private void displayMenu(boolean isMain) {
         if (isMain) {
+            btNew.setVisibility(View.GONE);
             llMain.setVisibility(View.VISIBLE);
-            tlResult.setVisibility(View.GONE);
+            tvSubtitle.setVisibility(View.VISIBLE);
+            llClassResult.setVisibility(View.GONE);
             imageView.setImageDrawable(getResources().getDrawable(R.drawable.hiblatekbg, getTheme()));
         }
         else {
+            btNew.setVisibility(View.VISIBLE);
             llMain.setVisibility(View.GONE);
-            tlResult.setVisibility(View.VISIBLE);
+            llClassResult.setVisibility(View.VISIBLE);
+            tvSubtitle.setVisibility(View.GONE);
         }
     }
 
@@ -299,5 +418,56 @@ public class MainActivity extends AppCompatActivity {
             }
 
         } catch (Exception e) { }
+    }
+
+    private boolean thread_type_filled_in() {
+        return !selectedWarp.isEmpty() || !selectedWeft.isEmpty();
+    }
+
+    private void threadOptionAlert(boolean forWarp) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        String[] options = new String[] {"Piña Liniwan", "Piña Washed", "Silk"};
+        String prompt = (forWarp ? "Warp" : "Weft") + " material";
+        builder.setTitle(prompt)
+                .setSingleChoiceItems(options, -1, new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int which) {
+                        // Handle selection
+                        if (forWarp) selectedWarp = options[which];
+                        else selectedWeft = options[which];
+                    }
+                })
+                .setPositiveButton("OK", (dialogInterface, i) -> {
+                    spWarp.setText(selectedWarp);
+                    spWeft.setText(selectedWeft);
+                })
+                .setNegativeButton("Cancel", null);
+
+        AlertDialog dialog = builder.create();
+        dialog.show();
+    }
+
+    private void orientationOptionAlert() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        String[] options = new String[] {"Weft is horizontal.", "Weft is vertical."};
+        final int[] selectedOption = {0};
+        String prompt = "Select the weft's orientation";
+        builder.setTitle(prompt)
+                .setSingleChoiceItems(options, -1, new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int which) {
+                        // Handle selection
+                        selectedOption[0] = which;
+                    }
+                })
+                .setPositiveButton("OK", (dialogInterface, i) -> {
+                    spOrientation.setText(options[selectedOption[0]]);
+                    if (selectedOption[0] == 0)
+                        this.selectedOrientation = "horizontal";
+                    else
+                        this.selectedOrientation = "vertical";
+                })
+                .setNegativeButton("Cancel", null);
+
+        AlertDialog dialog = builder.create();
+        dialog.show();
     }
 }
