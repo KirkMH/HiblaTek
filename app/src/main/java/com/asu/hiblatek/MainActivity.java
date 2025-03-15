@@ -4,6 +4,7 @@ import android.content.ContentResolver;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
@@ -17,22 +18,18 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
-import android.widget.Spinner;
-import android.widget.TableLayout;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.Manifest;
 
-import androidx.activity.result.ActivityResultLauncher;
-import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.core.content.FileProvider;
 
@@ -46,8 +43,10 @@ import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
     private final String SHARED_PREF_DISCLAIMER_LABEL = "hiblatek.disclaimer";
+    private final String SHARED_PREF_ANALYSIS_COUNTER = "hiblatek.counter";
     private static final int CAMERA_REQUEST = 1888;
     private static final int GALLERY_REQUEST = 2888;
+    private static final int PERMISSION_REQUEST_CODE = 101;
     private final String TAG = "com.asu.hiblatek";
     private LinearLayout llMain;
     private LinearLayout llClassResult;
@@ -127,27 +126,13 @@ public class MainActivity extends AppCompatActivity {
                 Toast.makeText(getApplicationContext(), "Please select the thread type for warp and weft.", Toast.LENGTH_SHORT).show();
                 return;
             }
-                Intent cameraIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-            File photo;
-            try
-            {
-                // place where to store camera taken picture
-                photo = createTemporaryFile("picture", ".jpg");
-                photo.delete();
-            }
-            catch(Exception e)
-            {
-                Log.v(TAG, "Can't create file to take picture!");
-                Toast.makeText(getApplicationContext(), "Please check SD card. Cannot take a photo.", Toast.LENGTH_SHORT).show();
-                return;
-            }
 
-            mImageUri = FileProvider.getUriForFile(getApplicationContext(),
-                    getApplicationContext().getApplicationContext().getPackageName() + ".provider",
-                    photo);
-            cameraIntent.putExtra(MediaStore.EXTRA_OUTPUT, mImageUri);
-            //start camera intent
-            startActivityForResult(cameraIntent, CAMERA_REQUEST);
+            // Check permissions before launching the camera
+            if (checkPermissions()) {
+                launchCamera();
+            } else {
+                requestPermissions();
+            }
         });
 
         Button btnGallery = findViewById(R.id.btnGallery);
@@ -174,6 +159,67 @@ public class MainActivity extends AppCompatActivity {
         });
 
         displayDisclaimer(false);
+    }
+
+    private void launchCamera() {
+        File photo;
+        try
+        {
+            // place where to store camera taken picture
+            photo = createTemporaryFile("picture", ".jpg");
+            photo.delete();
+        }
+        catch(Exception e)
+        {
+            Log.v(TAG, "Can't create file to take picture!");
+            Toast.makeText(getApplicationContext(), "Please check SD card. Cannot take a photo.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        Intent cameraIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        mImageUri = FileProvider.getUriForFile(getApplicationContext(),
+                getApplicationContext().getApplicationContext().getPackageName() + ".provider",
+                photo);
+        cameraIntent.putExtra(MediaStore.EXTRA_OUTPUT, mImageUri);
+        //start camera intent
+        startActivityForResult(cameraIntent, CAMERA_REQUEST);
+    }
+
+    private boolean checkPermissions() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) { // Android 13+
+            return ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED &&
+                    ContextCompat.checkSelfPermission(this, Manifest.permission.READ_MEDIA_IMAGES) == PackageManager.PERMISSION_GRANTED;
+        } else {
+            return ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED &&
+                    ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED;
+        }
+    }
+
+    private void requestPermissions() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) { // Android 13+
+            ActivityCompat.requestPermissions(this, new String[]{
+                    Manifest.permission.CAMERA,
+                    Manifest.permission.READ_MEDIA_IMAGES,
+                    Manifest.permission.WRITE_EXTERNAL_STORAGE
+            }, PERMISSION_REQUEST_CODE);
+        } else {
+            ActivityCompat.requestPermissions(this, new String[]{
+                    Manifest.permission.CAMERA,
+                    Manifest.permission.READ_EXTERNAL_STORAGE,
+                    Manifest.permission.WRITE_EXTERNAL_STORAGE
+            }, PERMISSION_REQUEST_CODE);
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == PERMISSION_REQUEST_CODE) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                launchCamera();
+            } else {
+                Toast.makeText(this, "Permission Denied!", Toast.LENGTH_SHORT).show();
+            }
+        }
     }
 
     @Override
@@ -268,22 +314,53 @@ public class MainActivity extends AppCompatActivity {
      */
     @RequiresApi(api = Build.VERSION_CODES.Q)
     private void processImage(Bitmap b) {
-        displayBitmapWithBorders(b);
-        FiberCounter fc = new FiberCounter(b, getApplicationContext());
-        imageList = fc.start();
+        if (isAnalysisCounterValid()) {
+            displayBitmapWithBorders(b);
+            FiberCounter fc = new FiberCounter(b, getApplicationContext());
+            imageList = fc.start();
 
-        FiberCounter.Count c = fc.getCount();
-        if (selectedOrientation.equals("horizontal")) {
-            tvWarps.setText(c.vertical + "");
-            tvWefts.setText(c.horizontal + "");
-            displayClassification(c.vertical, c.horizontal);
+            FiberCounter.Count c = fc.getCount();
+            if (selectedOrientation.equals("horizontal")) {
+                tvWarps.setText(c.vertical + "");
+                tvWefts.setText(c.horizontal + "");
+                displayClassification(c.vertical, c.horizontal);
+            } else {
+                tvWarps.setText(c.horizontal + "");
+                tvWefts.setText(c.vertical + "");
+                displayClassification(c.horizontal, c.vertical);
+            }
+            displayMenu(false);
         }
-        else {
-            tvWarps.setText(c.horizontal + "");
-            tvWefts.setText(c.vertical + "");
-            displayClassification(c.horizontal, c.vertical);
+    }
+
+    private boolean isAnalysisCounterValid() {
+        SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+        int analysisCtr = pref.getInt(SHARED_PREF_ANALYSIS_COUNTER, 0);
+        analysisCtr++;
+        pref.edit()
+                .putInt(SHARED_PREF_ANALYSIS_COUNTER, analysisCtr)
+                .apply();
+
+        if (analysisCtr > 10) {
+            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            builder.setTitle("Beta Version Analysis Limit Reached");
+            builder.setMessage(
+                        "You have reached the maximum number of analyses allowed in this beta version. The current HiblaTek app is a prototype designed for beta testing to assess its accuracy and functionality. During this phase, you may analyze fabrics up to ten (10) times. Future updates will introduce tiered options, allowing you to select the plan that best fits your needs.\n\n" +
+                        "Thank you for your understanding and support as we work towards delivering a reliable and fully functional HiblaTek app."
+            );
+            builder.setIcon(R.drawable.information);
+            // Accept (Positive) action
+            builder.setPositiveButton("OK", null);
+            // Close (Negative) action
+            builder.setNegativeButton("Close Application", (dialogInterface, i) -> finish());
+            // Create the AlertDialog
+            AlertDialog alertDialog = builder.create();
+            // set other dialog properties
+            alertDialog.setCancelable(false);
+            alertDialog.show();
         }
-        displayMenu(false);
+
+        return analysisCtr <= 10;
     }
 
     private void displayBitmapWithBorders(Bitmap b) {
@@ -390,7 +467,7 @@ public class MainActivity extends AppCompatActivity {
                 AlertDialog.Builder builder = new AlertDialog.Builder(this);
                 builder.setTitle("Disclaimer");
                 builder.setMessage(
-                        "Please note that the current version of the HiblaTek app is a prototype intended solely for testing purposes to ensure the accuracy and functionality of the application. This version is not the final product and may contain errors or bugs that could affect its performance.\n\n" +
+                        "Please note that the current version of the HiblaTek app is a prototype designed for beta testing to evaluate its accuracy and functionality. During this phase, you may analyze fabrics up to ten (10) times. Future updates will introduce tiered options, allowing you to choose the plan that best suits your needs.\n\n" +
                                 "Furthermore, please be aware that the features, design, and functionality of the final version of HiblaTek may differ significantly from what is currently available in this prototype. Changes and improvements may be made to the app without prior notice.\n\n" +
                                 "By using the HiblaTek app, you agree to the terms and conditions outlined in this disclaimer. If you do not agree with any part of this disclaimer, we kindly request that you refrain from using the app until the final version is released.\n\n" +
                                 "Thank you for your understanding and support as we work towards delivering a reliable and fully functional HiblaTek app."
@@ -421,7 +498,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private boolean thread_type_filled_in() {
-        return !selectedWarp.isEmpty() || !selectedWeft.isEmpty();
+        return !selectedWarp.equals("- Please select -") || !selectedWeft.equals("- Please select -");
     }
 
     private void threadOptionAlert(boolean forWarp) {
