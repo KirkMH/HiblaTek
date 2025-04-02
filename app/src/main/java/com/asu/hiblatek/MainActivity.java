@@ -50,8 +50,6 @@ public class MainActivity extends AppCompatActivity {
     private final String TAG = "com.asu.hiblatek";
     private LinearLayout llMain;
     private LinearLayout llClassResult;
-    private TextView tvWarps;
-    private TextView tvWefts;
     private TextView tvSubtitle;
     private TextView tvClass;
     private TextView tvWarpSpec;
@@ -68,6 +66,7 @@ public class MainActivity extends AppCompatActivity {
     private String selectedWarp = "- Please select -";
     private String selectedWeft = "- Please select -";
     private String selectedOrientation = "horizontal";
+    private String standards = "";
 
     private final BaseLoaderCallback mLoaderCallback = new BaseLoaderCallback(this) {
         @Override
@@ -88,8 +87,6 @@ public class MainActivity extends AppCompatActivity {
         llClassResult = findViewById(R.id.llClassResult);
         btNew = findViewById(R.id.btNew);
         imageView = findViewById(R.id.imageView1);
-        tvWarps = findViewById(R.id.tvWarps);
-        tvWefts = findViewById(R.id.tvWefts);
         tvSubtitle = findViewById(R.id.subtitle);
         tvClass = findViewById(R.id.tvClass);
         spWarp = findViewById(R.id.warp_spinner);
@@ -156,6 +153,13 @@ public class MainActivity extends AppCompatActivity {
 
         btNew.setOnClickListener(view -> {
             displayMenu(true);
+        });
+
+        tvClass.setOnClickListener(view -> {
+            if (!standards.isEmpty()) {
+                showStandardsAlert();
+            }
+
         });
 
         displayDisclaimer(false);
@@ -320,15 +324,11 @@ public class MainActivity extends AppCompatActivity {
             imageList = fc.start();
 
             FiberCounter.Count c = fc.getCount();
-            if (selectedOrientation.equals("horizontal")) {
-                tvWarps.setText(c.vertical + "");
-                tvWefts.setText(c.horizontal + "");
+            if (selectedOrientation.equals("horizontal"))
                 displayClassification(c.vertical, c.horizontal);
-            } else {
-                tvWarps.setText(c.horizontal + "");
-                tvWefts.setText(c.vertical + "");
+            else
                 displayClassification(c.horizontal, c.vertical);
-            }
+
             displayMenu(false);
         }
     }
@@ -381,40 +381,54 @@ public class MainActivity extends AppCompatActivity {
         String warpClass = "Quality Standard";
         String weftClass = "Quality Standard";
         if (selectedWarp.equals("Piña Liniwan") && selectedWeft.equals("Piña Liniwan")) {
-            type = (v >= 40 && h >= 101) ? "Premium" : "Regular";
+            type = (v >= 40 && h >= 101) ? "Premium" : "First Class";
             if (h < 80) weftClass = "Below Standard";
             if (v < 40) warpClass = "Below Standard";
+            standards = "PREMIUM\n" +
+                        "  Warp (Liniwan): 40-50 dents/in\n" +
+                        "  Weft (Liniwan): at least 101 beats/in\n\n" +
+                        "FIRST CLASS\n" +
+                        "  Warp (Liniwan): 40-50 dents/in\n" +
+                        "  Weft (Liniwan): 80-100 beats/in\n\n";
         }
         else if (selectedWarp.equals("Piña Liniwan") && selectedWeft.equals("Piña Washed")) {
-            type = (v >= 40 && h >= 76) ? "Premium" : "Regular";
+            type = (v >= 40 && h >= 76) ? "Premium" : "First Class";
             if (h < 65) weftClass = "Below Standard";
             if (v < 40) warpClass = "Below Standard";
+            standards = "PREMIUM\n" +
+                    "  Warp (Liniwan): 40-50 dents/in\n" +
+                    "  Weft (Washed): 76-90 beats/in\n\n" +
+                    "FIRST CLASS\n" +
+                    "  Warp (Liniwan): 40-50 dents/in\n" +
+                    "  Weft (Washed): 65-75 beats/in\n\n";
         }
         else if (selectedWarp.equals("Silk") && selectedWeft.equals("Piña Washed")) {
-            type = (v >= 40 && h >= 76) ? "Premium" : "Regular";
+            type = (v >= 40 && h >= 76) ? "Premium" : "First Class";
             if (h < 65) weftClass = "Below Standard";
             if (v < 40) warpClass = "Below Standard";
+            standards = "PREMIUM\n" +
+                    "  Warp (Silk): 40-50 dents/in\n" +
+                    "  Weft (Washed): 76-90 beats/in\n\n" +
+                    "FIRST CLASS\n" +
+                    "  Warp (Silk): 40-50 dents/in\n" +
+                    "  Weft (Washed): 65-75 beats/in\n\n";
         }
-        else
+        else {
             type = "Undetermined";
+            standards = "";
+        }
 
         tvClass.setText(warpClass.equals("Below Standard") || weftClass.equals("Below Standard") ? "Below Standard" : type);
         tvOrientationSpec.setText("Orientation: Weft is " + selectedOrientation + ".");
-        tvWarpSpec.setText("Warp - " + selectedWarp + ": " + warpClass);
-        tvWeftSpec.setText("Weft - " + selectedWeft + ": " + weftClass);
+        tvWarpSpec.setText("Warp - " + selectedWarp + " (" + v + "dpi): " + warpClass);
+        tvWeftSpec.setText("Weft - " + selectedWeft + " (" + v + "bpi): " + weftClass);
 
-        if (type.equals("Premium")) {
+        if (type.equals("Premium"))
             tvClass.setBackgroundResource(R.drawable.rounded_corner_gold);
-            tvClass.setTextColor(ContextCompat.getColor(this, R.color.gold));
-        }
-        else if (type.equals("Regular")) {
+        else if (type.equals("First Class"))
             tvClass.setBackgroundResource(R.drawable.rounded_corner_olive);
-            tvClass.setTextColor(ContextCompat.getColor(this, R.color.olive));
-        }
-        else {
+        else
             tvClass.setBackgroundResource(R.drawable.rounded_corner_taupe);
-            tvClass.setTextColor(ContextCompat.getColor(this, R.color.dark_gray));
-        }
     }
 
     private void displayMenu(boolean isMain) {
@@ -546,5 +560,25 @@ public class MainActivity extends AppCompatActivity {
 
         AlertDialog dialog = builder.create();
         dialog.show();
+    }
+
+    private void showStandardsAlert() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("AKLAN PIÑA MANTRA STANDARDS");
+        builder.setMessage(standards);
+        builder.setIcon(R.drawable.information);
+        // Accept (Positive) action
+        builder.setPositiveButton("OK", null);
+        // Create the AlertDialog
+        AlertDialog alertDialog = builder.create();
+        // set other dialog properties
+        alertDialog.setCancelable(false);
+        alertDialog.show();
+
+        // setup the Accept action
+        Button posBtn = alertDialog.getButton(AlertDialog.BUTTON_POSITIVE);
+        posBtn.setOnClickListener(view -> {
+            alertDialog.cancel();
+        });
     }
 }

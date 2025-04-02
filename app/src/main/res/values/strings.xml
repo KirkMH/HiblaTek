@@ -2,6 +2,9 @@
     <string name="app_name">HiblaTek</string>
     <string name="action_disclaimer">Disclaimer</string>
     <string name="title_activity_splash">HiblaTek</string>
+    <string name="copyright">© 2023 HiblaTek. All Rights Reserved.</string>
+    <string name="reg_no">Reg. No.: 2023-04524-N-TCCR</string>
+    <string name="patent">Patent Pending: Ref. Code: N7703WV15V8202515T</string>
 
     <string-array name="thread_array">
         <item>Piña Liniwan</item>

@@ -168,66 +168,24 @@
             android:layout_marginTop="20dp"
             android:background="@color/silver" />
 
-        <TableLayout
-            android:id="@+id/tlResult"
+        <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:padding="10dp"
-            android:stretchColumns="*"
-            android:gravity="bottom|center">
-
-            <TableRow>
-                <TextView
-                    android:layout_width="200dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="10dp"
-                    android:textSize="24sp"
-                    android:paddingLeft="20dp"
-                    android:textColor="@color/brown"
-                    android:text="Warp" />
-                <TextView
-                    android:id="@+id/tvWarps"
-                    android:layout_width="150dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="10dp"
-                    android:paddingRight="20dp"
-                    android:gravity="right"
-                    android:textSize="24sp"
-                    android:textColor="@color/brown"
-                    android:text="21" />
-            </TableRow>
-
-            <TableRow>
-                <TextView
-                    android:layout_width="200dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="10dp"
-                    android:textSize="24sp"
-                    android:paddingLeft="20dp"
-                    android:textColor="@color/brown"
-                    android:text="Weft" />
-                <TextView
-                    android:id="@+id/tvWefts"
-                    android:layout_width="150dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="10dp"
-                    android:paddingRight="20dp"
-                    android:gravity="right"
-                    android:textSize="24sp"
-                    android:textColor="@color/brown"
-                    android:text="21" />
-            </TableRow>
-        </TableLayout>
+            android:layout_marginTop="20dp"
+            android:text="RESULT:"
+            android:textSize="16sp"
+            android:textColor="@color/black" />
 
         <TextView
             android:id="@+id/tvClass"
             android:layout_width="match_parent"
             android:layout_height="50dp"
-            android:layout_marginTop="20dp"
+            android:layout_marginTop="5dp"
             android:gravity="center_vertical|center"
             android:background="@drawable/rounded_corner_taupe"
             android:textColor="@color/black"
             android:textSize="18sp"
+            android:textStyle="bold"
             android:text="Class" />
 
         <TextView

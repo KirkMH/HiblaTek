@@ -12,10 +12,10 @@
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="3"
-        android:padding="80dp"
+        android:padding="50dp"
         android:scaleType="centerInside"
         android:adjustViewBounds="true"
-        android:src="@drawable/hiblatek_icon" />
+        android:src="@drawable/hiblatekbg_t2" />
 
     <LinearLayout
         android:orientation="horizontal"
@@ -54,5 +54,34 @@
             android:layout_weight="1" />
 
     </LinearLayout>
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textSize="10dp"
+        android:gravity="center"
+        android:color="@color/black"
+        android:text="@string/copyright" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textSize="10dp"
+        android:gravity="center"
+        android:color="@color/black"
+        android:text="@string/reg_no" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textSize="10dp"
+        android:gravity="center"
+        android:color="@color/black"
+        android:text="@string/patent" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="10dp" />
+
 
 </LinearLayout>
